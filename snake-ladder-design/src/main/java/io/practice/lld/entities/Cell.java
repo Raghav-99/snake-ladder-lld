@@ -1,19 +1,24 @@
 package io.practice.lld.entities;
 
 public class Cell {
-    private final Snake snake;
-    private final Ladder ladder;
-    public Cell(Snake snake, Ladder ladder)  {
-        assert (snake == null || ladder == null);
-        this.snake = snake;
-        this.ladder = ladder;
+    public final int x;
+    public final int y;
+    private boolean isUsed;
+    private Obstacle obstacle;
+    public Cell(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
-
-    public Snake getSnake() {
-        return this.snake;
+    public void setIsUsed(boolean isUsed) {
+        this.isUsed = isUsed;
     }
-
-    public Ladder getLadder() {
-        return this.ladder;
+    public void setObstacle(Obstacle obstacle) {
+        this.obstacle = obstacle;
+    }
+    public Obstacle getObstacle() {
+        return this.obstacle;
+    }
+    public boolean getIsUsed() {
+        return this.isUsed;
     }
 }

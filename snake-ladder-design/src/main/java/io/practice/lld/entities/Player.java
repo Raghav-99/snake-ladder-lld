@@ -1,31 +1,22 @@
 package io.practice.lld.entities;
 
 public class Player {
-    private Coordinates position;
+    private Cell position;
     private final String name;
-    private boolean hasWon = false;
-    public Player(Coordinates position, String name) {
+    public Player(Cell position, String name) {
         this.position = position;
         this.name = name;
     }
 
-    public void setPosition(Coordinates position) {
+    public void setPosition(Cell position) {
         this.position = position;
     }
 
-    public Coordinates getPosition() {
+    public Cell getPosition() {
         return this.position;
     }
 
     public String getName() {
         return this.name;
-    }
-
-    public void setHasWon(boolean val) {
-        hasWon = true;
-    }
-
-    public boolean getHasWon() {
-        return this.hasWon;
     }
 }
