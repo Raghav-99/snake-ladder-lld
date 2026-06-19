@@ -1,8 +1,7 @@
 package io.practice.lld.service;
 
 import io.practice.lld.entities.Cell;
-import io.practice.lld.entities.Die;
-import io.practice.lld.entities.Player;
+import io.practice.lld.entities.Obstacle;
 
 public class SimpleGameService extends AbstractGameService {
     public SimpleGameService(GameState state) {
@@ -11,27 +10,29 @@ public class SimpleGameService extends AbstractGameService {
     
 
     @Override
-    boolean end() {
-        return state.movesLeft() > 0;
+    public boolean end() {
+        return state.getBoard().lastCell.getPlayerCount() == 1;
     }
 
 
     @Override
-    Cell start() {
-        int val = state.getDie().peek();
-        int y = state.getPlayer().getPosition().y + val, x = state.getPlayer().getPosition().x;
-        if(y >= state.getBoard().maxLen) {
-            x++;
-            y -= state.getBoard().maxLen;
+    public boolean start() {
+        move();
+        return state.getPlayer().getPosition() != state.getBoard().firstCell;
+    }
+
+
+    @Override
+    public void move() {
+        int[] pos = calcPosition();
+        Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
+        if(newPos != null) {
+            Obstacle obstacle = newPos.getObstacle();
+            if(obstacle != null) {
+                newPos = obstacle.doAction(newPos);
+            }
+            state.getPlayer().modifyPosition(newPos, state.getPlayer().getPosition());
         }
-        return state.getBoard().cellAt(x, y);
-    }
-
-
-    @Override
-    Cell move() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'move'");
     }
 
 }

@@ -4,10 +4,9 @@ import java.util.Random;
 
 public class Die {
     private int rollValue = 0;
-    public int roll() {
+    public void roll() {
         Random random = new Random();
-        int rv = rollValue = random.nextInt(1, 6);
-        return rv;
+        rollValue = random.nextInt(1, 6);
     }
 
     public int peek() {

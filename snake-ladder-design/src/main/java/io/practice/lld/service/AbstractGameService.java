@@ -1,16 +1,18 @@
 package io.practice.lld.service;
 
-import io.practice.lld.entities.Cell;
-import io.practice.lld.entities.Die;
-import io.practice.lld.entities.Player;
-
 public abstract class AbstractGameService {
-    protected final GameState state;
+    public final GameState state;
     protected AbstractGameService(GameState state) {
         this.state = state;
     }
-    abstract Cell start();
-    abstract Cell move();
-    abstract boolean end();
-    // protected abstract Cell ob
+    public abstract boolean start();
+    public abstract void move();
+    public abstract boolean end();
+    public int[] calcPosition() {
+        int val = state.getDie().peek();
+        int y = state.getPlayer().getPosition().y, x = state.getPlayer().getPosition().x;
+        int len = (int)Math.sqrt(state.getBoard().maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;
+        int ri = (newGridPos-1)/len, ci = (newGridPos-1)%len;
+        return new int[] {ri, ci};
+    }
 }
