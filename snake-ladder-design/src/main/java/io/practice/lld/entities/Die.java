@@ -6,7 +6,7 @@ public class Die {
     private int rollValue = 0;
     public void roll() {
         Random random = new Random();
-        rollValue = random.nextInt(1, 6);
+        rollValue = random.nextInt(1, 7);
     }
 
     public int peek() {

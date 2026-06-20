@@ -2,7 +2,7 @@
  <properties>
     <entry key="board_size_row">10</entry>
     <entry key="board_size_col">10</entry>
-    <entry key="spawn.snakes">[(5,5,3,3), (8,5,0,1), (4,1,2,1), (7,1,3,4), (6,6,3,2)]</entry>
-    <entry key="spawn.ladders">[(0,2,2,1), (2,2,4,4), (6,9,8,9), (8,4,9,8)]</entry>
+    <entry key="obstacle_snake">./src/resources/obstacle-config/snake.xml</entry>
+    <entry key="obstacle_ladder">./src/resources/obstacle-config/ladder.xml</entry>
     <entry key="playerCount">4</entry>
  </properties>

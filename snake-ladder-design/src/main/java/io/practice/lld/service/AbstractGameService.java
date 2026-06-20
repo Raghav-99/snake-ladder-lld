@@ -8,7 +8,7 @@ public abstract class AbstractGameService {
     public abstract boolean start();
     public abstract void move();
     public abstract boolean end();
-    public int[] calcPosition() {
+    protected int[] calcPosition() {
         int val = state.getDie().peek();
         int y = state.getPlayer().getPosition().y, x = state.getPlayer().getPosition().x;
         int len = (int)Math.sqrt(state.getBoard().maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;

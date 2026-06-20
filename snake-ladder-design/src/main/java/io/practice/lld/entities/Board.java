@@ -6,7 +6,9 @@ public class Board {
     public final Cell lastCell;
     public final int maxLen;
     public Board(int rows, int columns) {
-        assert (rows > 1 && columns > 1 && rows == columns);
+        if (rows <= 1 || columns <= 1 || rows != columns) {
+            throw new IllegalArgumentException("rows and columns must be greater than 1 and equal");
+        }
         cells = new Cell[rows][columns];
         for (int i = 0; i < cells.length; i++) {
             for (int j = 0; j < cells[i].length; j++) {
