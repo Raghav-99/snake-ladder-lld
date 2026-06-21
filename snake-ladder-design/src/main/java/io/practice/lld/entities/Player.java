@@ -33,6 +33,11 @@ public class Player {
     }
 
     @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
+    
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;

@@ -14,6 +14,11 @@ public class Winner {
     }
 
     @Override
+    public int hashCode() {
+        return player.getName().hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
