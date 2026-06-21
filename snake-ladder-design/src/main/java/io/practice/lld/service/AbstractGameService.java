@@ -38,7 +38,11 @@ public abstract class AbstractGameService {
         int val = state.getDie().peek();
         int y = p.getPosition().y, x = p.getPosition().x;
         int len = (int)Math.sqrt(state.getBoard().maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;
-        int ri = (newGridPos-1)/len, ci = (newGridPos-1)%len;
-        return new int[] {ri, ci};
+        if(newGridPos <= len)
+        {
+            int ri = (newGridPos-1)/len, ci = (newGridPos-1)%len;
+            return new int[] {ri, ci};
+        }
+        return new int[] {x,y};
     }
 }
