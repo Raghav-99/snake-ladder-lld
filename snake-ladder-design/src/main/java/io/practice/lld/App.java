@@ -21,7 +21,7 @@ public class App
             properties.loadFromXML(input);
             Game game = new Game(properties);
             GameState gameState = new GameState(game.getBoard(), game.getDie());
-            GameController controller = new GameController(new SimpleGameService(gameState));
+            GameController controller = new GameController(new SimpleGameService(gameState, game.getPlayers().size()));
             controller.run(game.getPlayers(), game.getDie());
         } catch (IOException e) {
             // TODO Auto-generated catch block

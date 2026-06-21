@@ -4,16 +4,10 @@ import io.practice.lld.entities.Cell;
 import io.practice.lld.entities.Obstacle;
 
 public class SimpleGameService extends AbstractGameService {
-    public SimpleGameService(GameState state) {
-        super(state);
+    public SimpleGameService(GameState state, int totalPlayers) {
+        super(state, 1, totalPlayers);
     }
     
-
-    @Override
-    public boolean end() {
-        return state.getBoard().lastCell.getPlayerCount() == 1;
-    }
-
 
     @Override
     public boolean start() {

@@ -4,7 +4,12 @@ import io.practice.lld.entities.Player;
 
 public abstract class AbstractGameService {
     protected final GameState state;
-    protected AbstractGameService(GameState state) {
+    protected final int totalWinnersAllowed;
+    protected AbstractGameService(GameState state, int totalWinnersAllowed, int totalPlayers) {
+        if(totalWinnersAllowed > 0)
+            this.totalWinnersAllowed = Math.min(totalWinnersAllowed, totalPlayers);
+        else
+            throw new IllegalArgumentException("totalWinnersAllowed argument must be greater than 0"); 
         this.state = state;
     }
     public GameState getGameState() {
@@ -12,7 +17,9 @@ public abstract class AbstractGameService {
     }
     public abstract boolean start();
     public abstract void move();
-    public abstract boolean end();
+    public boolean end() {
+        return state.getWinners().size() == totalWinnersAllowed;
+    }
     
     public void next(Player player) {
         state.setPlayer(player);

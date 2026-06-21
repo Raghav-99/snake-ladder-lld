@@ -6,8 +6,8 @@ public class Player {
     private boolean winner = false;
 
     public Player(Cell position, String name) {
-        modifyPosition(position, null);
         this.name = name;
+        modifyPosition(position, null);
     }
 
     public void modifyPosition(Cell position, Cell oldPosition) {
@@ -36,7 +36,7 @@ public class Player {
     public int hashCode() {
         return this.name.hashCode();
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
