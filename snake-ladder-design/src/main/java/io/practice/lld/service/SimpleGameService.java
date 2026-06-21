@@ -2,6 +2,7 @@ package io.practice.lld.service;
 
 import io.practice.lld.entities.Cell;
 import io.practice.lld.entities.Obstacle;
+import io.practice.lld.entities.Player;
 
 public class SimpleGameService extends AbstractGameService {
     public SimpleGameService(GameState state, int totalPlayers) {
@@ -11,22 +12,21 @@ public class SimpleGameService extends AbstractGameService {
 
     @Override
     public boolean start() {
-        move();
         return state.getPlayer().getPosition() != state.getBoard().firstCell;
     }
 
 
     @Override
-    public void move() {
-        int[] pos = calcPosition();
+    protected Cell move(Player p) {
+        int[] pos = calcPosition(p);
         Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
         if(newPos != null) {
             Obstacle obstacle = newPos.getObstacle();
             if(obstacle != null) {
                 newPos = obstacle.doAction(newPos);
             }
-            state.getPlayer().modifyPosition(newPos, state.getPlayer().getPosition());
         }
+        return newPos != null ? newPos : p.getPosition();
     }
 
 }

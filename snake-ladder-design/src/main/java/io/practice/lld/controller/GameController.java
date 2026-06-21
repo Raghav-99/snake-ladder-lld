@@ -8,43 +8,30 @@ import io.practice.lld.entities.Obstacle;
 import io.practice.lld.entities.Player;
 import io.practice.lld.entities.Winner;
 import io.practice.lld.service.AbstractGameService;
-import io.practice.lld.service.GameState;
 
 public class GameController {
     private final AbstractGameService gameService;
+    private final String BEFORE = "BEFORE", AFTER = "AFTER";
     public GameController(AbstractGameService gameService) {
         this.gameService = gameService;
     }
 
     public void run(Queue<Player> players, Die die) throws InterruptedException {
-        final String BEFORE = "BEFORE", AFTER = "AFTER";
-        boolean started = false;
-        do {
+        while (!gameService.start()) {
             playTurn(players, die);
-            printCurrentState(BEFORE);
-            started = gameService.start();
-            printCurrentState(AFTER);
-        } while (!started);
-        
+        }
         System.out.println("Game has started...");
         
-        do {
+        while (!gameService.end()) {
             playTurn(players, die);
-            printCurrentState(BEFORE);
-            gameService.move();
-            gameService.markIfPlayerWon();
-            printCurrentState(AFTER);
-        } while (!gameService.end());
+        }
 
         for (Winner winner : gameService.getGameState().getWinners()) {
             System.out.println(winner);
         }
     }
 
-    private void printCurrentState(String stage) {
-        GameState state = gameService.getGameState();
-        Player p = state.getPlayer();
-        int roll = state.getDie().peek();
+    private void printCurrentPlayerInfo(String stage, Player p, int roll) {
         Obstacle obstacle = p.getPosition().getObstacle();
         Cell cell = p.getPosition();
         System.out.println(String.format("stage: %s | player: %s | die_roll: %d | cell: %s | Obstacle: %s", stage, p.getName(), roll, cell.toString(), obstacle == null ? "null" : obstacle.toString()));
@@ -55,8 +42,11 @@ public class GameController {
         do {
             currPlayer = players.poll();
         } while (!players.isEmpty() && currPlayer.getWinner());
-        gameService.next(currPlayer);
-        players.add(currPlayer);
+        printCurrentPlayerInfo(BEFORE, currPlayer, -1);
         die.roll();
+        gameService.next(currPlayer);
+        printCurrentPlayerInfo(AFTER, currPlayer, die.peek());
+        players.add(currPlayer);
+        gameService.markIfPlayerWon();
     }
 }

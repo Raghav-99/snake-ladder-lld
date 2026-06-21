@@ -1,5 +1,6 @@
 package io.practice.lld.service;
 
+import io.practice.lld.entities.Cell;
 import io.practice.lld.entities.Player;
 
 public abstract class AbstractGameService {
@@ -17,12 +18,14 @@ public abstract class AbstractGameService {
     }
     
     public abstract boolean start();
-    public abstract void move();
+    protected abstract Cell move(Player p);
     
     public final boolean end() {
         return state.getWinners().size() == totalWinnersAllowed;
     }
-    public void next(Player player) {
+    public final void next(Player player) {
+        Cell newPos = move(player);
+        player.modifyPosition(newPos, player.getPosition());
         state.setPlayer(player);
     }
     public final void markIfPlayerWon() {
@@ -30,10 +33,10 @@ public abstract class AbstractGameService {
             state.addWinner();
         }
     }
-    
-    protected int[] calcPosition() {
+
+    protected int[] calcPosition(Player p) {
         int val = state.getDie().peek();
-        int y = state.getPlayer().getPosition().y, x = state.getPlayer().getPosition().x;
+        int y = p.getPosition().y, x = p.getPosition().x;
         int len = (int)Math.sqrt(state.getBoard().maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;
         int ri = (newGridPos-1)/len, ci = (newGridPos-1)%len;
         return new int[] {ri, ci};

@@ -15,9 +15,10 @@ public class GameState {
     private final Die die;
     private final Set<Winner> winners = new HashSet<>();
 
-    public GameState(Board board, Die die) {
+    public GameState(Board board, Die die, Player p) {
         this.board = board;
         this.die = die;
+        this.p = p;
     }
 
     public Die getDie() {
