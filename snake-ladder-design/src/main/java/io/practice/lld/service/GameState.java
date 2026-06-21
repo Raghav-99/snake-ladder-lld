@@ -37,7 +37,7 @@ public class GameState {
     }
 
     boolean addWinner() {
-        p.setWinner(true);
+        p.setWinner();
         return winners.add(new Winner(p, this.die.peek()));
     }
 

@@ -24,7 +24,7 @@ public class Player {
         return this.name;
     }
 
-    public void setWinner(boolean b) {
+    public void setWinner() {
         winner = true;
     }
 

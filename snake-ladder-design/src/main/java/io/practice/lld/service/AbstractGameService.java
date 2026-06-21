@@ -15,20 +15,22 @@ public abstract class AbstractGameService {
     public GameState getGameState() {
         return this.state;
     }
+    
     public abstract boolean start();
     public abstract void move();
-    public boolean end() {
+    
+    public final boolean end() {
         return state.getWinners().size() == totalWinnersAllowed;
     }
-    
     public void next(Player player) {
         state.setPlayer(player);
     }
-    public void markIfPlayerWon() {
+    public final void markIfPlayerWon() {
         if(state.getBoard().lastCell.hasPlayer(state.getPlayer())) {
             state.addWinner();
         }
     }
+    
     protected int[] calcPosition() {
         int val = state.getDie().peek();
         int y = state.getPlayer().getPosition().y, x = state.getPlayer().getPosition().x;
