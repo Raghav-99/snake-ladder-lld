@@ -5,4 +5,5 @@
     <entry key="obstacle_snake">./src/resources/obstacle-config/snake.xml</entry>
     <entry key="obstacle_ladder">./src/resources/obstacle-config/ladder.xml</entry>
     <entry key="playerCount">4</entry>
+    <entry key="gameType">Simple</entry>
  </properties>

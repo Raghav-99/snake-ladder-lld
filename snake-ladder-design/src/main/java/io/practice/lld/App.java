@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import io.practice.lld.controller.GameController;
-import io.practice.lld.service.GameState;
-import io.practice.lld.service.SimpleGameService;
+import io.practice.lld.factory.ServiceFactory;
 
 /**
  * Hello world!
@@ -20,8 +19,7 @@ public class App
         try(FileInputStream input = new FileInputStream("./src/resources/config.xml")) {
             properties.loadFromXML(input);
             Game game = new Game(properties);
-            GameState gameState = new GameState(game.getBoard(), game.getDie());
-            GameController controller = new GameController(new SimpleGameService(gameState, game.getPlayers().size()));
+            GameController controller = new GameController(new ServiceFactory().createService(game));
             controller.run(game.getPlayers(), game.getDie());
         } catch (IOException e) {
             // TODO Auto-generated catch block

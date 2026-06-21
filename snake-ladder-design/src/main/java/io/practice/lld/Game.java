@@ -22,6 +22,7 @@ public class Game {
     private final Board board;
     private final Queue<Player> players = new LinkedList<>();
     private final Die die;
+    private final String gameType;
     public Board getBoard() {
         return board;
     }
@@ -34,13 +35,23 @@ public class Game {
         return die;
     }
 
+    public String getGameType() {
+        return gameType;
+    }
+
     public Game(Properties config) throws UnsupportedOperationException, IllegalArgumentException, FileNotFoundException, IOException {
         board = setupBoard(config);
         setupObstacles(config);
         setupPlayers(config);
         die = setupDie(config);
+        gameType = setupGameType(config);
     }
 
+
+    private String setupGameType(Properties config) {
+        String type = config.getProperty("gameType");
+        return type == null || type.isBlank() ? "Simple" : type;
+    }
 
     private void setupPlayers(Properties config) throws NumberFormatException {
         String count = config.getProperty("playerCount", "4");
