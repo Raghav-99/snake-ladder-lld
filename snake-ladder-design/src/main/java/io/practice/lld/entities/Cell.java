@@ -1,10 +1,13 @@
 package io.practice.lld.entities;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Cell implements Comparable<Cell> {
     public final int x;
     public final int y;
     private Obstacle obstacle;
-    private int playerCount;
+    private final Set<Player> players = new HashSet<>();
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
@@ -15,15 +18,19 @@ public class Cell implements Comparable<Cell> {
     public Obstacle getObstacle() {
         return this.obstacle;
     }
-    void increasePlayerCount() {
-        playerCount += 1;
+
+    public void addPlayer(Player p) {
+        players.add(p);
     }
-    void decreasePlayerCount() {
-        playerCount -= 1;
+    public void removePlayer(Player p) {
+        players.remove(p);
+    }
+    public boolean hasPlayer(Player p) {
+        return players.contains(p);
     }
     public int getPlayerCount() {
-        return playerCount;
-    }
+        return players.size();
+    } 
 
     @Override
     public String toString() {
