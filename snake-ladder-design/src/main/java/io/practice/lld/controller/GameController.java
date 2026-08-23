@@ -8,12 +8,15 @@ import io.practice.lld.entities.Obstacle;
 import io.practice.lld.entities.Player;
 import io.practice.lld.entities.Winner;
 import io.practice.lld.service.AbstractGameService;
+import io.practice.lld.service.GameState;
 
 public class GameController {
     private final AbstractGameService gameService;
     private final String BEFORE = "BEFORE", AFTER = "AFTER";
+    private final GameState gameState;
     public GameController(AbstractGameService gameService) {
         this.gameService = gameService;
+        gameState = gameService.getGameState();
     }
 
     public void run(Queue<Player> players, Die die) throws InterruptedException {
@@ -32,8 +35,8 @@ public class GameController {
     }
 
     private void printCurrentPlayerInfo(String stage, Player p, int roll) {
-        Obstacle obstacle = p.getPosition().getObstacle();
         Cell cell = p.getPosition();
+        Obstacle obstacle = gameState.getBoard().getObstacleAt(cell);
         System.out.println(String.format("stage: %s | player: %s | die_roll: %d | cell: %s | Obstacle: %s", stage, p.getName(), roll, cell.toString(), obstacle == null ? "null" : obstacle.toString()));
     }
 

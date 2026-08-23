@@ -6,18 +6,18 @@ import java.util.Set;
 public class Cell implements Comparable<Cell> {
     public final int x;
     public final int y;
-    private Obstacle obstacle;
+    // private Obstacle obstacle;
     private final Set<Player> players = new HashSet<>();
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
     }
-    public void setObstacle(Obstacle obstacle) {
-        this.obstacle = obstacle;
-    }
-    public Obstacle getObstacle() {
-        return this.obstacle;
-    }
+    // public void setObstacle(Obstacle obstacle) {
+    //     this.obstacle = obstacle;
+    // }
+    // public Obstacle getObstacle() {
+    //     return this.obstacle;
+    // }
 
     public void addPlayer(Player p) {
         players.add(p);

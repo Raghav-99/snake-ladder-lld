@@ -6,10 +6,10 @@ public class Snake extends Obstacle {
         super(start, end);
     }
 
-    @Override
-    public Cell doAction(Cell curr) {
-        return curr == start ? end : curr;
-    }
+    // @Override
+    // public Cell doAction(Cell curr) {
+    //     return curr == start ? end : curr;
+    // }
 
     @Override
     public void throwIfSpawnInvalid(Cell start, Cell end) {

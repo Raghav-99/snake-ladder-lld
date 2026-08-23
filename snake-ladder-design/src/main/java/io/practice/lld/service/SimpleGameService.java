@@ -16,15 +16,15 @@ public class SimpleGameService extends AbstractGameService {
     }
 
 
-    @Override
-    protected Cell move(Player p) {
-        int[] pos = calcPosition(p);
-        Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
-        Obstacle obstacle = newPos.getObstacle();
-        if(obstacle != null) {
-            newPos = obstacle.doAction(newPos);
-        }
-        return newPos != null ? newPos : p.getPosition();
-    }
+    // @Override
+    // protected Cell move(Player p) {
+    //     int[] pos = calcPosition(p);
+    //     Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
+    //     Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
+    //     if(obstacle != null) {
+    //         newPos = obstacle.doAction(state.getBoard().getMutatedPositionByObstacle(newPos));
+    //     }
+    //     return newPos != null ? newPos : p.getPosition();
+    // }
 
 }

@@ -1,14 +1,16 @@
 package io.practice.lld;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import io.practice.lld.entities.Board;
@@ -23,6 +25,17 @@ public class Game {
     private final Queue<Player> players = new LinkedList<>();
     private final Die die;
     private final String gameType;
+    private final Map<Cell, Obstacle> obstacleMap = new HashMap<>();
+    private final Map<Cell, List<Cell>> obstacleGraph = new HashMap<>();
+
+    public Map<Cell, Obstacle> getObstacleMap() {
+        return obstacleMap;
+    }
+
+    public Map<Cell, List<Cell>> getObstacleGraph() {
+        return obstacleGraph;
+    }
+
     public Board getBoard() {
         return board;
     }
@@ -39,7 +52,7 @@ public class Game {
         return gameType;
     }
 
-    public Game(Properties config) throws UnsupportedOperationException, IllegalArgumentException, FileNotFoundException, IOException {
+    public Game(Properties config) throws Exception {
         board = setupBoard(config);
         setupObstacles(config);
         setupPlayers(config);
@@ -72,7 +85,7 @@ public class Game {
         return new Die();
     }
 
-    private void setupObstacles(Properties config) throws FileNotFoundException, IOException  {
+    private void setupObstacles(Properties config) throws Exception  {
         final String OBSTACLE_LITERAL = "obstacle_";
         if(!(config.containsKey(OBSTACLE_LITERAL.concat("snake")) && config.containsKey(OBSTACLE_LITERAL.concat("ladder"))))
             throw new UnsupportedOperationException("The game is not supported without snakes and ladders atleast!");
@@ -83,26 +96,37 @@ public class Game {
             Properties obstacleConfig = new Properties();
             try(InputStream file = new FileInputStream(obstaclePath)) {
                 obstacleConfig.loadFromXML(file);
-                setSpawnPoints(obstacleConfig, obstacleType);
-            }
-            finally {
+                // todo: use priority queue instead
+                Set<Cell> obsCells = setSpawnPoints(obstacleConfig, obstacleType);
+                while(!obsCells.isEmpty()) {
+                    if(!validObstacleSetup(new HashSet<>(),new HashSet<>(), obsCells, )) {
+                            throw new IllegalStateException("Game building stage error: The obstacle setup is invalid. Either multiple obstacles occupy the same cell or there exists a cycle b/w 3 or more obstacles");
+                    }
+                }                
+            } finally {
+                
             }
         }
         
     }
 
-    private void setSpawnPoints(Properties obstacleConfig, String type) {
+    private Set<Cell> setSpawnPoints(Properties obstacleConfig, String type) throws IllegalArgumentException {
         String val = obstacleConfig.getProperty("coordinates");
         List<int[]> coords = val.transform(s -> parseCoordinates(s));
+        Set<Cell> nodes = new HashSet<>();
         for (int[] coord : coords) {
             int x1 = coord[0], y1 = coord[1], x2 = coord[2], y2 = coord[3];
             Cell start = board.cellAt(x1, y1), end = board.cellAt(x2, y2);
-            if(start.getObstacle() == null && end.getObstacle() == null) {
-                Obstacle obstacle = ObstacleFactory.createObstacle(type, start, end);
-                start.setObstacle(obstacle);
-                end.setObstacle(obstacle);
-            }
+            // if(start.getObstacle() == null && end.getObstacle() == null) {
+                if(nodes.add(start)) {
+                    throw new IllegalArgumentException("Error: Cell: %s "+start.toString()+ " is attempting to add multiple obstacles");
+                }
+                ObstacleFactory.createObstacle(type, start, end, obstacleMap, obstacleGraph);
+                // start.setObstacle(obstacle);
+                // end.setObstacle(obstacle);
+            // }
         }
+        return nodes;
     }
 
     // todo: replace the first if block with assert
@@ -135,5 +159,22 @@ public class Game {
             throw new IllegalArgumentException("board rows and columns must be equal");
         }
         return new Board(r,c);
+    }
+
+    boolean validObstacleSetup(Set<Cell> seen, Set<Cell> visited, Set<Cell> obsCells, Cell c) {
+        if(seen.contains(c)) return false;
+        if(visited.contains(c)) return true;
+        List<Cell> cells = obstacleGraph.get(c);
+        if(cells != null) {
+            seen.add(c);
+            for(Cell neighbor : cells) {
+                if(!validObstacleSetup(seen, visited, obsCells, neighbor))
+                    return false;
+            }
+        }
+        seen.remove(c);
+        visited.add(c);
+        obsCells.remove(c);
+        return true;
     }
 }

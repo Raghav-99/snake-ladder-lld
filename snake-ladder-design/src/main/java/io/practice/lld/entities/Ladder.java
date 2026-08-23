@@ -5,10 +5,10 @@ public class Ladder extends Obstacle {
         super(start, end);
     }
 
-    @Override
-    public Cell doAction(Cell curr) {
-        return curr == start ? end : curr;
-    }
+    // @Override
+    // public Cell doAction(Cell curr) {
+    //     return curr == start ? end : curr;
+    // }
 
     @Override
     protected void throwIfSpawnInvalid(Cell start, Cell end) throws IllegalArgumentException {

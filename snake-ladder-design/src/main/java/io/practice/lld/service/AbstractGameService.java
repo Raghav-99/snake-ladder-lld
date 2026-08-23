@@ -1,6 +1,7 @@
 package io.practice.lld.service;
 
 import io.practice.lld.entities.Cell;
+import io.practice.lld.entities.Obstacle;
 import io.practice.lld.entities.Player;
 
 public abstract class AbstractGameService {
@@ -18,8 +19,16 @@ public abstract class AbstractGameService {
     }
     
     public abstract boolean start();
-    protected abstract Cell move(Player p);
     
+    protected final Cell move(Player p) {
+        int[] pos = calcPosition(p);
+        Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
+        Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
+        if(obstacle != null) {
+            newPos = state.getBoard().getMutatedPositionByObstacle(newPos);
+        }
+        return newPos != null ? newPos : p.getPosition();
+    }
     public final boolean end() {
         return state.getWinners().size() == totalWinnersAllowed;
     }
@@ -37,8 +46,9 @@ public abstract class AbstractGameService {
     protected int[] calcPosition(Player p) {
         int val = state.getDie().peek();
         int y = p.getPosition().y, x = p.getPosition().x;
-        int len = (int)Math.sqrt(state.getBoard().maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;
-        if(newGridPos <= len)
+        int maxLen = state.getBoard().maxLen;
+        int len = (int)Math.sqrt(maxLen), gridPos = len*x + (y+1), newGridPos = val+gridPos;
+        if(newGridPos <= maxLen)
         {
             int ri = (newGridPos-1)/len, ci = (newGridPos-1)%len;
             return new int[] {ri, ci};
