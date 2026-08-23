@@ -18,7 +18,7 @@ public abstract class AbstractGameService {
         return this.state;
     }
     
-    public abstract boolean start();
+    public abstract boolean start(Player p);
     
     protected final Cell move(Player p) {
         int[] pos = calcPosition(p);
@@ -33,15 +33,19 @@ public abstract class AbstractGameService {
         Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
         if(obstacle != null) {
             mutatedPos = state.getBoard().getMutatedPositionByObstacle(newPos);
+            player.modifyPosition(mutatedPos, player.getPosition());
         }
-        player.modifyPosition(newPos, player.getPosition());
-        state.setPlayer(player);
+        else {
+            player.modifyPosition(newPos, player.getPosition());
+        }
         return new TurnData(oldPos, newPos, mutatedPos, obstacle);
     }
-    public final void markIfPlayerWon() {
-        if(state.getBoard().lastCell.hasPlayer(state.getPlayer())) {
-            state.addWinner();
+    public final boolean markIfPlayerWon(Player currPlayer) {
+        if(state.getBoard().lastCell.hasPlayer(currPlayer)) {
+            state.addWinner(currPlayer);
+            return true;
         }
+        return false;
     }
 
     protected int[] calcPosition(Player p) {

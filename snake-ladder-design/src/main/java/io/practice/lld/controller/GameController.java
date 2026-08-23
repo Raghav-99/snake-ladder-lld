@@ -16,9 +16,11 @@ public class GameController {
     }
 
     public void run(Queue<Player> players, Die die) throws InterruptedException {
-        while (!gameService.start()) {
+        Player p = null;
+        do {
+            p = players.peek();
             playTurn(players, die);
-        }
+        } while (!gameService.start(p));
         System.out.println("Game has started...");
         
         while (!gameService.end()) {
@@ -35,15 +37,13 @@ public class GameController {
     }
 
     private void playTurn(Queue<Player> players, Die die) {
-        Player currPlayer = null;
-        do {
-            currPlayer = players.poll();
-        } while (!players.isEmpty() && currPlayer.getWinner());
+        if(players.isEmpty()) return;
+        Player currPlayer = players.poll();
         printCurrentPlayerInfo(BEFORE, currPlayer, -1, null);
         die.roll();
         TurnData turnData = gameService.next(currPlayer);
         printCurrentPlayerInfo(AFTER, currPlayer, die.peek(), turnData);
-        players.add(currPlayer);
-        gameService.markIfPlayerWon();
+        if(!gameService.markIfPlayerWon(currPlayer))
+            players.add(currPlayer);
     }
 }

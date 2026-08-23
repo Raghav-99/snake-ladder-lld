@@ -119,6 +119,7 @@ public class Game {
             int x1 = coord[0], y1 = coord[1], x2 = coord[2], y2 = coord[3];
             Cell start = board.cellAt(x1, y1), end = board.cellAt(x2, y2);
             ObstacleFactory.createObstacle(type, start, end, obstacleMap, obstacleGraph);
+            nodes.add(start);
         }
         return nodes;
     }
