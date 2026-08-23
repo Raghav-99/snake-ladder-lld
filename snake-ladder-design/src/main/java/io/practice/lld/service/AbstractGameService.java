@@ -23,19 +23,20 @@ public abstract class AbstractGameService {
     protected final Cell move(Player p) {
         int[] pos = calcPosition(p);
         Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
-        Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
-        if(obstacle != null) {
-            newPos = state.getBoard().getMutatedPositionByObstacle(newPos);
-        }
         return newPos != null ? newPos : p.getPosition();
     }
     public final boolean end() {
         return state.getWinners().size() == totalWinnersAllowed;
     }
-    public final void next(Player player) {
-        Cell newPos = move(player);
+    public final TurnData next(Player player) {
+        Cell oldPos = player.getPosition(), newPos = move(player), mutatedPos = null;
+        Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
+        if(obstacle != null) {
+            mutatedPos = state.getBoard().getMutatedPositionByObstacle(newPos);
+        }
         player.modifyPosition(newPos, player.getPosition());
         state.setPlayer(player);
+        return new TurnData(oldPos, newPos, mutatedPos, obstacle);
     }
     public final void markIfPlayerWon() {
         if(state.getBoard().lastCell.hasPlayer(state.getPlayer())) {
@@ -54,5 +55,9 @@ public abstract class AbstractGameService {
             return new int[] {ri, ci};
         }
         return new int[] {x,y};
+    }
+
+    public Obstacle getObstacleAt(Cell cell) {
+        return state.getBoard().getObstacleAt(cell);
     }
 }

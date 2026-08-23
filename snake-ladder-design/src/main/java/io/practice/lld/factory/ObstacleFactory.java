@@ -28,7 +28,7 @@ public class ObstacleFactory {
     }
 
     private static void fillObstacleMap(Cell start, Cell end, Map<Cell,Obstacle> obsMap, Map<Cell,List<Cell>> obsGraph, Obstacle obs) throws IllegalArgumentException {
-        if(obsMap.containsKey(start)) throw new IllegalArgumentException("Error: Multiple obstacles cannot start from same cell. Conflicting cells: "+start+" and "+end);
+        if(obsMap.containsKey(start)) throw new IllegalArgumentException("Error: Cell: %s "+start.toString()+ " is attempting to add multiple obstacles");
         obsMap.put(start, obs);
         obsGraph.compute(start, (k,v) -> v == null ? new ArrayList<>(List.of()) : v).add(end);
     }

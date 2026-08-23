@@ -2,21 +2,17 @@ package io.practice.lld.controller;
 
 import java.util.Queue;
 
-import io.practice.lld.entities.Cell;
 import io.practice.lld.entities.Die;
-import io.practice.lld.entities.Obstacle;
 import io.practice.lld.entities.Player;
 import io.practice.lld.entities.Winner;
 import io.practice.lld.service.AbstractGameService;
-import io.practice.lld.service.GameState;
+import io.practice.lld.service.TurnData;
 
 public class GameController {
     private final AbstractGameService gameService;
     private final String BEFORE = "BEFORE", AFTER = "AFTER";
-    private final GameState gameState;
     public GameController(AbstractGameService gameService) {
         this.gameService = gameService;
-        gameState = gameService.getGameState();
     }
 
     public void run(Queue<Player> players, Die die) throws InterruptedException {
@@ -34,10 +30,8 @@ public class GameController {
         }
     }
 
-    private void printCurrentPlayerInfo(String stage, Player p, int roll) {
-        Cell cell = p.getPosition();
-        Obstacle obstacle = gameState.getBoard().getObstacleAt(cell);
-        System.out.println(String.format("stage: %s | player: %s | die_roll: %d | cell: %s | Obstacle: %s", stage, p.getName(), roll, cell.toString(), obstacle == null ? "null" : obstacle.toString()));
+    private void printCurrentPlayerInfo(String stage, Player p, int roll, TurnData turnData) {
+        System.out.println(String.format("stage: %s | player: %s | die_roll: %d | turn_data: %s", stage, p.getName(), roll, turnData == null ? "null" : turnData));
     }
 
     private void playTurn(Queue<Player> players, Die die) {
@@ -45,10 +39,10 @@ public class GameController {
         do {
             currPlayer = players.poll();
         } while (!players.isEmpty() && currPlayer.getWinner());
-        printCurrentPlayerInfo(BEFORE, currPlayer, -1);
+        printCurrentPlayerInfo(BEFORE, currPlayer, -1, null);
         die.roll();
-        gameService.next(currPlayer);
-        printCurrentPlayerInfo(AFTER, currPlayer, die.peek());
+        TurnData turnData = gameService.next(currPlayer);
+        printCurrentPlayerInfo(AFTER, currPlayer, die.peek(), turnData);
         players.add(currPlayer);
         gameService.markIfPlayerWon();
     }

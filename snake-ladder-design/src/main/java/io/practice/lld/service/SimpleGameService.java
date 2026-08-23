@@ -1,9 +1,5 @@
 package io.practice.lld.service;
 
-import io.practice.lld.entities.Cell;
-import io.practice.lld.entities.Obstacle;
-import io.practice.lld.entities.Player;
-
 public class SimpleGameService extends AbstractGameService {
     public SimpleGameService(GameState state, int totalPlayers) {
         super(state, 1, totalPlayers);
@@ -14,17 +10,4 @@ public class SimpleGameService extends AbstractGameService {
     public boolean start() {
         return state.getPlayer().getPosition() != state.getBoard().firstCell;
     }
-
-
-    // @Override
-    // protected Cell move(Player p) {
-    //     int[] pos = calcPosition(p);
-    //     Cell newPos = state.getBoard().cellAt(pos[0], pos[1]);
-    //     Obstacle obstacle = state.getBoard().getObstacleAt(newPos);
-    //     if(obstacle != null) {
-    //         newPos = obstacle.doAction(state.getBoard().getMutatedPositionByObstacle(newPos));
-    //     }
-    //     return newPos != null ? newPos : p.getPosition();
-    // }
-
 }
