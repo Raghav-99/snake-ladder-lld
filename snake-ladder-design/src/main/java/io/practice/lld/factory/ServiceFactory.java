@@ -8,7 +8,7 @@ import io.practice.lld.service.SimpleGameService;
 public class ServiceFactory {
     private final String simpleGameType = "Simple";
     public AbstractGameService createService(Game game)  {
-        GameState state = new GameState(game.getBoard(), game.getDie(), game.getPlayers().peek(), game.getObstacleMap(), game.getObstacleGraph());
+        GameState state = new GameState(game.getBoard(), game.getDie(), game.getPlayers().peek());
         int totalPlayers = game.getPlayers().size();
         if(game.getGameType().equals(simpleGameType)) {
             return new SimpleGameService(state, totalPlayers);

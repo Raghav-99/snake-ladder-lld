@@ -29,14 +29,6 @@ public class Game {
     private final Map<Cell, Obstacle> obstacleMap = new HashMap<>();
     private final Map<Cell, List<Cell>> obstacleGraph = new HashMap<>();
 
-    public Map<Cell, Obstacle> getObstacleMap() {
-        return obstacleMap;
-    }
-
-    public Map<Cell, List<Cell>> getObstacleGraph() {
-        return obstacleGraph;
-    }
-
     public Board getBoard() {
         return board;
     }
@@ -105,7 +97,8 @@ public class Game {
                     }
                 }                
             } finally {
-                
+                board.setObstacleGraph(obstacleGraph);
+                board.setObstacleMap(obstacleMap);
             }
         }
         

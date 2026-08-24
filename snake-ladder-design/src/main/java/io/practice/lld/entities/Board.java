@@ -20,8 +20,8 @@ public class Board {
     }
 
     public Board(int rows, int columns) {
-        if (rows <= 1 || columns <= 1 || rows != columns) {
-            throw new IllegalArgumentException("rows and columns must be greater than 1 and equal");
+        if (rows <= 4 || columns <= 4 || rows != columns) {
+            throw new IllegalArgumentException("rows and columns must be greater than 4 and equal");
         }
         cells = new Cell[rows][columns];
         for (int i = 0; i < cells.length; i++) {

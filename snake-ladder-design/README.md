@@ -9,16 +9,16 @@ player(s) who lands at the last grid position of the board is a winner.
 
 ## CONSTRAINTS
 #### Board Size: 
-Min and max size not enforced... i forgot lmao
+Atleast a 5x5.
 #### Player count: 
-Equal or greater than 4 players required for any game
+Equal or greater than 2 players required for any game.
 #### Obstacles: 
 Snakes and ladders are a must to play the game. Other obstacles can be configured if desired.
 Snake's head coordinates must be greater than its tail. Vice-versa is true for ladder.
 #### Die:
 Regular die enforced
 #### Player movement: 
-...not serpentine just a regular left to right movement(yeah i know)
+Current design is not serpentine. The players go left to right at each turn.
 #### Configuration and input handling: 
 The inputs like board size, player count, obstacles are configured in a `java.util.Properties` DTD-compliant XML file.
 
@@ -37,9 +37,7 @@ Configurable ~~but not like in the config file~~. Each game has 3 stages; start,
 
 #### OUTPUT:
 Ofc print the output to console in a readable manner. The output will be in the form of
-`"stage: %s | player: %s | die_roll: %d | cell: %s | Obstacle: %s"` where each section
-displays what it says except the `stage` section which is just another metadata to denote
-a `BEFORE` and a `AFTER` stage, pre and post player movement on their turn.
+`"turn_id: %d | player: %s | die_roll: %d | turn_data: %s"` where, *turn_id* is the current id of the turn being played, *player* is the current player playing the turn, *die_roll* is the die roll value of the current turn and *turn_data* is a combination of `"before roll: (%s) | after roll: (%s), obstacle: (%s), mutated position: (%s)"`. *before roll* is the old position of player i.e. before current turn, *after roll* is the current player position, *obstacle* is the obstacle at the current position, if present and *mutated position* is the final position of the current player after riding an obstacle.
 
 ## PROJECT STRUCTRE
 Did not pay much time to project structure tbh. Since I come from enterprise developer background, you will see resemblance of
@@ -58,18 +56,18 @@ Following are the domain objects in the `entities` folder: `Board`, `Cell`, `Die
 
 #### Let's talk about each of these:
 - `Board`: Lives in `Board.java`. Is the root entity/domain of the game. Its only resonsibility is to create a 2d array of `Cell`s by taking the row and column size input
-from the config.
+from the config and store the metadata of obstacles in the form of `Map<Cell,Obstacle> obstacleMap` and `Map<Cell,List<Cell>> obstacleGraph`. *obstacleMap* stores a obstacle's starting position and *obstacleGraph* represents a disjointed DAG of groups of obstacles, each connected by their *start* and *end* cells. *obstacleMap* is used to find out if there is an obstacle when players change their position after a turn and *obstacleGraph* serves 2 main purposes: detect cycles i.e., ladder: a -> b, snake: b -> a and mutating the player to their new position after riding an obstacle.
 
-- `Cell`: Lives in `Cell.java`. It resembles the grid position on a cartesian plane. Each cell contains an `Obstacle`. The reasoning to include an obstacle within a cell, was that I needed to know if a player has landed on a cell having it so that the player's position get changed according to the obstacle's action. Each cell also contains a member called `players` as a `Set<Player>` type reflecting multiple players in a cell. This was done to typically check the ending of the game, which is when any player could be at the last cell. The cell also implements a `Comparable` cuz I needed to it compare the cell coordinates when configuring the obstacles.
+- `Cell`: Lives in `Cell.java`. It resembles the grid position on a cartesian plane. ~~Each cell contains an `Obstacle`. The reasoning to include an obstacle within a cell, was that I needed to know if a player has landed on a cell having it so that the player's position get changed according to the obstacle's action~~. Each cell also contains a member called `players` as a `Set<Player>` type reflecting multiple players in a cell. This was done to typically check the ending of the game, which is when any player could be at the last cell. The cell also implements a `Comparable` cuz I needed to it compare the cell coordinates when configuring the obstacles.
 
 - `Die`: Lives in `Die.java`. Resembles a regular 6-faced die. Can be extended to create other complex types of dices but it won't matter right now cuz there is no factory for it.
 It has 2 public methods; `void roll()` that generates a random integer b/w 1 and 6 to indicate a roll and a `int peek()` that returns the last rolled count.
 
-- `Obstacle`: Lives in `Obstacle.java`. Is the abstract class for any obstacles like snake, ladder etc. Has an abstract method that subclasses need to implement called `Cell doAction(Cell)` and another called `void throwIfSpawnInvalid(Cell, Cell)` which is pretty self-explanatory. 
+- `Obstacle`: Lives in `Obstacle.java`. Is the abstract class for any obstacles like snake, ladder etc. Has an abstract method that subclasses need to implement called ~~`Cell doAction(Cell)`~~(redundant since obstacles are now represented as a DAG and its now used to mutate player position) and another called `void throwIfSpawnInvalid(Cell, Cell)` which throws an IllegalArgumentException if the spawn points are invalid for that obstacle. 
 
 This method takes a single argument of type cell which generally denotes the cell at which obstacle was encountered and its upto the dev to mutate the current player's position by returning the new Cell value. As with the case with `Cell`, any obstacle has a starting cell and an ending cell.
 
-- `Snake` and `Ladder`: Lives in `Snake.java` and `Ladder.java` respectively. Combining this 2 for brevity. Also pretty simple and self-explanatory. Do take a look into them.
+- `Snake` and `Ladder`: Lives in `Snake.java` and `Ladder.java` respectively. Combining this 2 for brevity.
 
 - `Player`: Lives in `Player.java`. Is the domain model reflecting a player. Has member `name` that reflects the id of the player which is unique and dynamically hardcoded in a loop during its construction. Member `position` reflects the current position of player in the board as a type `Cell`. Other than the usual getters, setters and hashcode/equals overriding(will get into that too), the only real thing to poke at is the `void modifyPosition(Cell, Cell)` that mutates the player's position by taking 2 arguments of type `Cell` where 1st is the new position and 2nd old. As can be guessed, when a player's position changes, the player is deleted from the old cell and put into the new one.
 
@@ -80,10 +78,9 @@ This method takes a single argument of type cell which generally denotes the cel
 Before going to the rest of the things, I wanted to put out the invariants that I have enforced in the game. This is mainly for myself because I want to get better at identifying invariants.
 - `totalPlayersAllowed` value: In the abstract class `AbstractGameService`, you will see that in the constructor call I am doing a kind of input santitation by restricting the value to the maximum of total players in any game. This prevents the infinite loop condition where the game doesn't end because an invalid value was provided to the highlighted member. It also fails fast if the member value is in negatives or 0.
 
-- `boolean end()` and `void markIfPlayerWon()` methods: In the same `AbstractGameService`, there are 2 final methods *end* and *markIfPlayerWon*. My reasoning was that since this is a snake and ladder game and typically in any such game, the game concludes when any player reaches the last cell on the board. As such, these 2 methods are marked invariant for devs because both of them mandate the end and win conditions to never change.
+- `boolean end()`, `void markIfPlayerWon()` and `void next(Player)` methods: In the same `AbstractGameService`, there are 3 final methods *end*, *markIfPlayerWon* and *next*. The reasoning was that since this is a snake and ladder game and typically in any such game, the game concludes when any player reaches the last cell on the board. As such, *end* and *markIfPlayerWon* methods are marked invariant for devs because both of them mandate the end and win conditions to never change.
 
-- Why `void next(Player)` and `int[] calcPosition()` aren't marked invariant?: Tbh i didn't really pay much attention to these as far as invariancy is concerned but now that I recall, I think I wanted to keep these 2 open in case something like skipping a player's turn if they are bit by a snake or if serpentine movement is required.
-
+As for *next*, what it does essentially is 2 bits of important things: call `calcPosition()` to move the player and check if the new position has any obstacle and if so mutate to the newest position. Hence, the only variable of concern is `calcPosition` since position calc would differ based on the type of movement a game allows.
 
 ## GAME LOGIC:
 - #### Configuration load:
@@ -108,8 +105,8 @@ Once the game is configured with all the required entities, now comes the first 
 
 **AbstractGameService** abstract class is the root contract to be implemented by any type of gameplay loop. What this means is that for any type of gameplay loop, a game service has to conform and implement this abstraction to have its distinct gameplay loop. The abstraction mandates 2 overrides; `boolean start()` which is used to indicate the start of a game loop once players start rolling the die from their **starting position**. The reasoning was that a game loop can be started when any no of parameters are met, which is thereby the decision of the implementor implementing the loop. This method has to return *true* boolean to indicate the controller, that the game has finally started. Eg: Players roll the die until they get a 6 to move from their starting point. And the last override to be made is the `Cell move(Player)` which is used to move the players themselves, returning their new mutated position. The reason to make *move* an abstraction was that each game loop type may require players to move in a certain way. Eg: In a serpentine game loop, players typically alternate their direction of movement at each row going from left->right, right->left, left->right... so on.
 
-Now, lets talk about the constuctor arguments. As I said, each implementation of this abstraction needs to provide 3 constructor arguments. *`GameState` is the **source of truth** for any game loop. This is where things like the current player, the current die, the winners and the board is stored. By having this model, it becomes easier to make any decision about how to mutate a player's position or when to call it a win for a player. This is much better than making spaghetti calls to the different entities for a decision.
-To add further, the **GameState** also in turn requires 3 constructor arguments i.e. `Board`, `Die` and the first `Player` who plays the turn. The board and die are crucial to keep the GameState valid so that every part of a players turn is validly captured.*
+Now, lets talk about the constuctor arguments. As I said, each implementation of this abstraction needs to provide 3 constructor arguments. *`GameState` is the **source of truth** for any game loop. This is where things like the current die, the winners and the board is stored. By having this model, it becomes easier to make any decision about how to mutate a player's position or when to call it a win for a player. This is much better than making spaghetti calls to the different entities for a decision.
+To add further, the **GameState** also in turn requires 2 constructor arguments i.e. `Board` and `Die`. The board and die are crucial to keep the GameState valid so that every part of a players turn is validly captured.*
 
 Next up is the `totalWinnersAllowed` which as it sounds is the count of how many maximum winners can there be in a game thereby ending the game loop. This has to be provided by the game loop type instance in its constructor call.
 
@@ -119,11 +116,11 @@ Continuing on `GameController` post instantiation, the `void run()` method is th
 responsible to run the game. Inside it you will find 2 loops, one as discussed is the loop execution until the players meet the required parameters of that loop type to, start the game indicated by the `start()` method. The next one after that is until the required no of winners are met indicated by the `end()` method, thereby ending the game and printing the winners to the console.
 
 - #### How a player's position is mutated:
-At each player's turn their current state is updated in the `GameState` which is majorly in this context is just the player who made the move itself. At each turn, the `GameController` calls the private method `void playTurn(Queue<Players>, Die)` which after doing some logic on removing players who may have won the game, calls the *invariant* implementation of the `final void next(Player)` in `AbstractGameService` taking the current player as its only argument. 
+~~At each player's turn their current state is updated in the `GameState` which is majorly in this context is just the player who made the move itself.~~ At each turn, the `GameController` calls the private method `void playTurn(Queue<Players>, Die)` which after doing some logic on removing players who may have won the game, calls the *invariant* implementation of the `final void next(Player)` in `AbstractGameService` taking the current player as its only argument. 
 
-Inside, the method calls the loop type's implementation of the `Cell move(Player)` which itself calls the position calculation method called `int[] calcPosition(Player)` returning an array of 2 values, new X and new Y coordinates. The method then checks, if the new `Cell` has an obstacle. If so, mutates the player position according to that obstacle's action method. Otherwise mutates the position normally, given the player won't go out of bounds. Once, the `move` method returns with a `Cell`, the caller `next` updates the player position.
+Inside, the method calls the loop type's implementation of the `final Cell move(Player)` which itself calls the position calculation method called `int[] calcPosition(Player)` returning an array of 2 values, new X and new Y coordinates. The `move` method then checks, if the new `Cell` has an obstacle. If so, mutates the player position according to ~~that obstacle's action method~~ the obstacle graph structure i.e. following the edge from the start to end cell. Otherwise mutates the position normally, given the player won't go out of bounds. Once, the `move` method returns with a `Cell`, the caller `next` updates the player position.
 
-This encapsulation of *playTurn()->...next()->move(),update_position() and state_update()* keeps the movement logic in one place.
+This encapsulation of *playTurn()->...next()->move(),update_position() ~~and state_update()~~* keeps the movement logic in one place.
 
 - #### How winners are tracked:
 As mentioned, on each call of the `void playTurn(Queue<Players>, Die)` method at the end of it, the `AbstractGameService` instance calls the *invariant* `final void markIfPlayerWon()`.
@@ -138,4 +135,52 @@ I didn't want to use any DP for the sake of it and the one I did end up using is
 
 **NOTE: In both the factories if the type is not found, *UnsupportedOperationException* will be thrown.**
 
-### ----------------------That's all for now. Thank you------------------------
+- ### Sample of a whole game run:
+```text
+turn_id: 0 | player: 1 | die_roll: 2 | turn_data: before roll: (0,0) after roll: (0,2), obstacle: (Ladder), mutated position: (2,1)
+Game has started...
+turn_id: 1 | player: 2 | die_roll: 3 | turn_data: before roll: (0,0) after roll: (0,3), obstacle: (null), mutated position: (null)
+turn_id: 2 | player: 1 | die_roll: 2 | turn_data: before roll: (2,1) after roll: (2,3), obstacle: (null), mutated position: (null)
+turn_id: 3 | player: 2 | die_roll: 2 | turn_data: before roll: (0,3) after roll: (0,5), obstacle: (null), mutated position: (null)
+turn_id: 4 | player: 1 | die_roll: 1 | turn_data: before roll: (2,3) after roll: (2,4), obstacle: (null), mutated position: (null)
+turn_id: 5 | player: 2 | die_roll: 3 | turn_data: before roll: (0,5) after roll: (0,8), obstacle: (null), mutated position: (null)
+turn_id: 6 | player: 1 | die_roll: 1 | turn_data: before roll: (2,4) after roll: (2,5), obstacle: (null), mutated position: (null)
+turn_id: 7 | player: 2 | die_roll: 1 | turn_data: before roll: (0,8) after roll: (0,9), obstacle: (null), mutated position: (null)
+turn_id: 8 | player: 1 | die_roll: 1 | turn_data: before roll: (2,5) after roll: (2,6), obstacle: (null), mutated position: (null)
+turn_id: 9 | player: 2 | die_roll: 2 | turn_data: before roll: (0,9) after roll: (1,1), obstacle: (null), mutated position: (null)
+turn_id: 10 | player: 1 | die_roll: 4 | turn_data: before roll: (2,6) after roll: (3,0), obstacle: (null), mutated position: (null)
+turn_id: 11 | player: 2 | die_roll: 3 | turn_data: before roll: (1,1) after roll: (1,4), obstacle: (null), mutated position: (null)
+turn_id: 12 | player: 1 | die_roll: 4 | turn_data: before roll: (3,0) after roll: (3,4), obstacle: (null), mutated position: (null)
+turn_id: 13 | player: 2 | die_roll: 6 | turn_data: before roll: (1,4) after roll: (2,0), obstacle: (null), mutated position: (null)
+turn_id: 14 | player: 1 | die_roll: 2 | turn_data: before roll: (3,4) after roll: (3,6), obstacle: (null), mutated position: (null)
+turn_id: 15 | player: 2 | die_roll: 2 | turn_data: before roll: (2,0) after roll: (2,2), obstacle: (Ladder), mutated position: (4,4)
+turn_id: 16 | player: 1 | die_roll: 5 | turn_data: before roll: (3,6) after roll: (4,1), obstacle: (Snake), mutated position: (2,1)
+turn_id: 17 | player: 2 | die_roll: 3 | turn_data: before roll: (4,4) after roll: (4,7), obstacle: (null), mutated position: (null)
+turn_id: 18 | player: 1 | die_roll: 5 | turn_data: before roll: (2,1) after roll: (2,6), obstacle: (null), mutated position: (null)
+turn_id: 19 | player: 2 | die_roll: 2 | turn_data: before roll: (4,7) after roll: (4,9), obstacle: (null), mutated position: (null)
+turn_id: 20 | player: 1 | die_roll: 3 | turn_data: before roll: (2,6) after roll: (2,9), obstacle: (null), mutated position: (null)
+turn_id: 21 | player: 2 | die_roll: 2 | turn_data: before roll: (4,9) after roll: (5,1), obstacle: (null), mutated position: (null)
+turn_id: 22 | player: 1 | die_roll: 6 | turn_data: before roll: (2,9) after roll: (3,5), obstacle: (null), mutated position: (null)
+turn_id: 23 | player: 2 | die_roll: 5 | turn_data: before roll: (5,1) after roll: (5,6), obstacle: (null), mutated position: (null)
+turn_id: 24 | player: 1 | die_roll: 2 | turn_data: before roll: (3,5) after roll: (3,7), obstacle: (null), mutated position: (null)
+turn_id: 25 | player: 2 | die_roll: 4 | turn_data: before roll: (5,6) after roll: (6,0), obstacle: (null), mutated position: (null)
+turn_id: 26 | player: 1 | die_roll: 2 | turn_data: before roll: (3,7) after roll: (3,9), obstacle: (null), mutated position: (null)
+turn_id: 27 | player: 2 | die_roll: 1 | turn_data: before roll: (6,0) after roll: (6,1), obstacle: (null), mutated position: (null)
+turn_id: 28 | player: 1 | die_roll: 4 | turn_data: before roll: (3,9) after roll: (4,3), obstacle: (null), mutated position: (null)
+turn_id: 29 | player: 2 | die_roll: 6 | turn_data: before roll: (6,1) after roll: (6,7), obstacle: (null), mutated position: (null)
+turn_id: 30 | player: 1 | die_roll: 5 | turn_data: before roll: (4,3) after roll: (4,8), obstacle: (null), mutated position: (null)
+turn_id: 31 | player: 2 | die_roll: 2 | turn_data: before roll: (6,7) after roll: (6,9), obstacle: (Ladder), mutated position: (8,9)
+turn_id: 32 | player: 1 | die_roll: 5 | turn_data: before roll: (4,8) after roll: (5,3), obstacle: (null), mutated position: (null)
+turn_id: 33 | player: 2 | die_roll: 4 | turn_data: before roll: (8,9) after roll: (9,3), obstacle: (null), mutated position: (null)
+turn_id: 34 | player: 1 | die_roll: 6 | turn_data: before roll: (5,3) after roll: (5,9), obstacle: (null), mutated position: (null)
+turn_id: 35 | player: 2 | die_roll: 4 | turn_data: before roll: (9,3) after roll: (9,7), obstacle: (null), mutated position: (null)
+turn_id: 36 | player: 1 | die_roll: 6 | turn_data: before roll: (5,9) after roll: (6,5), obstacle: (null), mutated position: (null)
+turn_id: 37 | player: 2 | die_roll: 1 | turn_data: before roll: (9,7) after roll: (9,8), obstacle: (null), mutated position: (null)
+turn_id: 38 | player: 1 | die_roll: 5 | turn_data: before roll: (6,5) after roll: (7,0), obstacle: (null), mutated position: (null)
+turn_id: 39 | player: 2 | die_roll: 2 | turn_data: before roll: (9,8) after roll: (9,8), obstacle: (null), mutated position: (null)
+turn_id: 40 | player: 1 | die_roll: 4 | turn_data: before roll: (7,0) after roll: (7,4), obstacle: (null), mutated position: (null)
+turn_id: 41 | player: 2 | die_roll: 4 | turn_data: before roll: (9,8) after roll: (9,8), obstacle: (null), mutated position: (null)
+turn_id: 42 | player: 1 | die_roll: 3 | turn_data: before roll: (7,4) after roll: (7,7), obstacle: (null), mutated position: (null)
+turn_id: 43 | player: 2 | die_roll: 1 | turn_data: before roll: (9,8) after roll: (9,9), obstacle: (null), mutated position: (null)
+Winner: Player 2 won the game by rolling a 1
+```
