@@ -4,7 +4,7 @@ public class Player {
     private Cell position;
     private final String name;
     private boolean winner = false;
-
+    
     public Player(Cell position, String name) {
         this.name = name;
         modifyPosition(position, null);
