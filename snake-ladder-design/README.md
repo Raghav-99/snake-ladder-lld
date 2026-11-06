@@ -103,7 +103,10 @@ The entirety of configuration operation is handled by the class `Game` in `Game.
 - #### Instantiation of `GameController` and `GameState`:
 Once the game is configured with all the required entities, now comes the first step to run the game i.e. instantiating `GameController` in `GameController.java`. The GameController takes one constructor argument and that is of the type `AbstractGameService`. This abstraction in turn takes 3 constructor arguments i.e. `GameState` and `totalWinnersAllowed` and `totalPlayers`. Let's take a closer look into what each of these things mean:
 
-**AbstractGameService** abstract class is the root contract to be implemented by any type of gameplay loop. What this means is that for any type of gameplay loop, a game service has to conform and implement this abstraction to have its distinct gameplay loop. The abstraction mandates 2 overrides; `boolean start()` which is used to indicate the start of a game loop once players start rolling the die from their **starting position**. The reasoning was that a game loop can be started when any no of parameters are met, which is thereby the decision of the implementor implementing the loop. This method has to return *true* boolean to indicate the controller, that the game has finally started. Eg: Players roll the die until they get a 6 to move from their starting point. And the last override to be made is the `Cell move(Player)` which is used to move the players themselves, returning their new mutated position. The reason to make *move* an abstraction was that each game loop type may require players to move in a certain way. Eg: In a serpentine game loop, players typically alternate their direction of movement at each row going from left->right, right->left, left->right... so on.
+**AbstractGameService** abstract class is the root contract to be implemented by any type of gameplay loop. What this means is that for any type of gameplay loop, a game service has to conform and implement this abstraction to have its distinct gameplay loop. The abstraction mandates 2 overrides; `boolean canStart(int dieRoll)` which is a die roll value check for the game to start. *True* means the game has started. Eg: Players roll the die until they get a 6 to move from their starting point
+(the start phase *for now* doesn't support arbitary start conditions).
+
+And the last override to be made is the `Cell move(Player)` which is used to move the players themselves, returning their new mutated position. The reason to make *move* an abstraction was that each game loop type may require players to move in a certain way. Eg: In a serpentine game loop, players typically alternate their direction of movement at each row going from left->right, right->left, left->right... so on. 
 
 Now, lets talk about the constuctor arguments. As I said, each implementation of this abstraction needs to provide 3 constructor arguments. *`GameState` is the **source of truth** for any game loop. This is where things like the current die, the winners and the board is stored. By having this model, it becomes easier to make any decision about how to mutate a player's position or when to call it a win for a player. This is much better than making spaghetti calls to the different entities for a decision.
 To add further, the **GameState** also in turn requires 2 constructor arguments i.e. `Board` and `Die`. The board and die are crucial to keep the GameState valid so that every part of a players turn is validly captured.*
@@ -113,7 +116,7 @@ Next up is the `totalWinnersAllowed` which as it sounds is the count of how many
 This brings us to the last argument; `totalPlayers`. This argument's value comes from the `config.xml` itself whose key is `playerCount`. During the instantiation of the game loop type, `totalWinnersAllowed` is normalized to always be within the limit of `totalPlayers` i.e. the former can never exceed the latter, which is reasonable.
 
 Continuing on `GameController` post instantiation, the `void run()` method is the only method
-responsible to run the game. Inside it you will find 2 loops, one as discussed is the loop execution until the players meet the required parameters of that loop type to, start the game indicated by the `start()` method. The next one after that is until the required no of winners are met indicated by the `end()` method, thereby ending the game and printing the winners to the console.
+responsible to run the game. Inside it you will find 2 loops, one as discussed is the loop execution until the players meet the required parameters of that loop type to, start the game indicated by the `canStart(int dieRoll)` method. The next one after that is until the required no of winners are met indicated by the `end()` method, thereby ending the game and printing the winners to the console.
 
 - #### How a player's position is mutated:
 ~~At each player's turn their current state is updated in the `GameState` which is majorly in this context is just the player who made the move itself.~~ At each turn, the `GameController` calls the private method `void playTurn(Queue<Players>, Die)` which after doing some logic on removing players who may have won the game, calls the *invariant* implementation of the `final void next(Player)` in `AbstractGameService` taking the current player as its only argument. 
@@ -137,50 +140,71 @@ I didn't want to use any DP for the sake of it and the one I did end up using is
 
 - ### Sample of a whole game run:
 ```text
-turn_id: 0 | player: 1 | die_roll: 2 | turn_data: before roll: (0,0) after roll: (0,2), obstacle: (Ladder), mutated position: (2,1)
-Game has started...
-turn_id: 1 | player: 2 | die_roll: 3 | turn_data: before roll: (0,0) after roll: (0,3), obstacle: (null), mutated position: (null)
-turn_id: 2 | player: 1 | die_roll: 2 | turn_data: before roll: (2,1) after roll: (2,3), obstacle: (null), mutated position: (null)
-turn_id: 3 | player: 2 | die_roll: 2 | turn_data: before roll: (0,3) after roll: (0,5), obstacle: (null), mutated position: (null)
-turn_id: 4 | player: 1 | die_roll: 1 | turn_data: before roll: (2,3) after roll: (2,4), obstacle: (null), mutated position: (null)
-turn_id: 5 | player: 2 | die_roll: 3 | turn_data: before roll: (0,5) after roll: (0,8), obstacle: (null), mutated position: (null)
-turn_id: 6 | player: 1 | die_roll: 1 | turn_data: before roll: (2,4) after roll: (2,5), obstacle: (null), mutated position: (null)
-turn_id: 7 | player: 2 | die_roll: 1 | turn_data: before roll: (0,8) after roll: (0,9), obstacle: (null), mutated position: (null)
-turn_id: 8 | player: 1 | die_roll: 1 | turn_data: before roll: (2,5) after roll: (2,6), obstacle: (null), mutated position: (null)
-turn_id: 9 | player: 2 | die_roll: 2 | turn_data: before roll: (0,9) after roll: (1,1), obstacle: (null), mutated position: (null)
-turn_id: 10 | player: 1 | die_roll: 4 | turn_data: before roll: (2,6) after roll: (3,0), obstacle: (null), mutated position: (null)
-turn_id: 11 | player: 2 | die_roll: 3 | turn_data: before roll: (1,1) after roll: (1,4), obstacle: (null), mutated position: (null)
-turn_id: 12 | player: 1 | die_roll: 4 | turn_data: before roll: (3,0) after roll: (3,4), obstacle: (null), mutated position: (null)
-turn_id: 13 | player: 2 | die_roll: 6 | turn_data: before roll: (1,4) after roll: (2,0), obstacle: (null), mutated position: (null)
-turn_id: 14 | player: 1 | die_roll: 2 | turn_data: before roll: (3,4) after roll: (3,6), obstacle: (null), mutated position: (null)
-turn_id: 15 | player: 2 | die_roll: 2 | turn_data: before roll: (2,0) after roll: (2,2), obstacle: (Ladder), mutated position: (4,4)
-turn_id: 16 | player: 1 | die_roll: 5 | turn_data: before roll: (3,6) after roll: (4,1), obstacle: (Snake), mutated position: (2,1)
-turn_id: 17 | player: 2 | die_roll: 3 | turn_data: before roll: (4,4) after roll: (4,7), obstacle: (null), mutated position: (null)
-turn_id: 18 | player: 1 | die_roll: 5 | turn_data: before roll: (2,1) after roll: (2,6), obstacle: (null), mutated position: (null)
-turn_id: 19 | player: 2 | die_roll: 2 | turn_data: before roll: (4,7) after roll: (4,9), obstacle: (null), mutated position: (null)
-turn_id: 20 | player: 1 | die_roll: 3 | turn_data: before roll: (2,6) after roll: (2,9), obstacle: (null), mutated position: (null)
-turn_id: 21 | player: 2 | die_roll: 2 | turn_data: before roll: (4,9) after roll: (5,1), obstacle: (null), mutated position: (null)
-turn_id: 22 | player: 1 | die_roll: 6 | turn_data: before roll: (2,9) after roll: (3,5), obstacle: (null), mutated position: (null)
-turn_id: 23 | player: 2 | die_roll: 5 | turn_data: before roll: (5,1) after roll: (5,6), obstacle: (null), mutated position: (null)
-turn_id: 24 | player: 1 | die_roll: 2 | turn_data: before roll: (3,5) after roll: (3,7), obstacle: (null), mutated position: (null)
-turn_id: 25 | player: 2 | die_roll: 4 | turn_data: before roll: (5,6) after roll: (6,0), obstacle: (null), mutated position: (null)
-turn_id: 26 | player: 1 | die_roll: 2 | turn_data: before roll: (3,7) after roll: (3,9), obstacle: (null), mutated position: (null)
-turn_id: 27 | player: 2 | die_roll: 1 | turn_data: before roll: (6,0) after roll: (6,1), obstacle: (null), mutated position: (null)
-turn_id: 28 | player: 1 | die_roll: 4 | turn_data: before roll: (3,9) after roll: (4,3), obstacle: (null), mutated position: (null)
-turn_id: 29 | player: 2 | die_roll: 6 | turn_data: before roll: (6,1) after roll: (6,7), obstacle: (null), mutated position: (null)
-turn_id: 30 | player: 1 | die_roll: 5 | turn_data: before roll: (4,3) after roll: (4,8), obstacle: (null), mutated position: (null)
-turn_id: 31 | player: 2 | die_roll: 2 | turn_data: before roll: (6,7) after roll: (6,9), obstacle: (Ladder), mutated position: (8,9)
-turn_id: 32 | player: 1 | die_roll: 5 | turn_data: before roll: (4,8) after roll: (5,3), obstacle: (null), mutated position: (null)
-turn_id: 33 | player: 2 | die_roll: 4 | turn_data: before roll: (8,9) after roll: (9,3), obstacle: (null), mutated position: (null)
-turn_id: 34 | player: 1 | die_roll: 6 | turn_data: before roll: (5,3) after roll: (5,9), obstacle: (null), mutated position: (null)
-turn_id: 35 | player: 2 | die_roll: 4 | turn_data: before roll: (9,3) after roll: (9,7), obstacle: (null), mutated position: (null)
-turn_id: 36 | player: 1 | die_roll: 6 | turn_data: before roll: (5,9) after roll: (6,5), obstacle: (null), mutated position: (null)
-turn_id: 37 | player: 2 | die_roll: 1 | turn_data: before roll: (9,7) after roll: (9,8), obstacle: (null), mutated position: (null)
-turn_id: 38 | player: 1 | die_roll: 5 | turn_data: before roll: (6,5) after roll: (7,0), obstacle: (null), mutated position: (null)
-turn_id: 39 | player: 2 | die_roll: 2 | turn_data: before roll: (9,8) after roll: (9,8), obstacle: (null), mutated position: (null)
-turn_id: 40 | player: 1 | die_roll: 4 | turn_data: before roll: (7,0) after roll: (7,4), obstacle: (null), mutated position: (null)
-turn_id: 41 | player: 2 | die_roll: 4 | turn_data: before roll: (9,8) after roll: (9,8), obstacle: (null), mutated position: (null)
-turn_id: 42 | player: 1 | die_roll: 3 | turn_data: before roll: (7,4) after roll: (7,7), obstacle: (null), mutated position: (null)
-turn_id: 43 | player: 2 | die_roll: 1 | turn_data: before roll: (9,8) after roll: (9,9), obstacle: (null), mutated position: (null)
+turn_id: 0 | player: 2 | die_roll: 6 | turn_data: before roll: (0,0) after roll: (0,6), obstacle: (null), mutated position: (null)
+--Game started by player 2--
+turn_id: 1 | player: 1 | die_roll: 2 | turn_data: before roll: (0,0) after roll: (0,2), obstacle: (Ladder), mutated position: (2,1)
+turn_id: 2 | player: 2 | die_roll: 2 | turn_data: before roll: (0,6) after roll: (0,8), obstacle: (null), mutated position: (null)
+turn_id: 3 | player: 1 | die_roll: 2 | turn_data: before roll: (2,1) after roll: (2,3), obstacle: (null), mutated position: (null)
+turn_id: 4 | player: 2 | die_roll: 6 | turn_data: before roll: (0,8) after roll: (1,4), obstacle: (null), mutated position: (null)
+turn_id: 5 | player: 1 | die_roll: 5 | turn_data: before roll: (2,3) after roll: (2,8), obstacle: (null), mutated position: (null)
+turn_id: 6 | player: 2 | die_roll: 6 | turn_data: before roll: (1,4) after roll: (2,0), obstacle: (null), mutated position: (null)
+turn_id: 7 | player: 1 | die_roll: 5 | turn_data: before roll: (2,8) after roll: (3,3), obstacle: (null), mutated position: (null)
+turn_id: 8 | player: 2 | die_roll: 3 | turn_data: before roll: (2,0) after roll: (2,3), obstacle: (null), mutated position: (null)
+turn_id: 9 | player: 1 | die_roll: 2 | turn_data: before roll: (3,3) after roll: (3,5), obstacle: (null), mutated position: (null)
+turn_id: 10 | player: 2 | die_roll: 6 | turn_data: before roll: (2,3) after roll: (2,9), obstacle: (null), mutated position: (null)
+turn_id: 11 | player: 1 | die_roll: 6 | turn_data: before roll: (3,5) after roll: (4,1), obstacle: (Snake), mutated position: (2,1)
+turn_id: 12 | player: 2 | die_roll: 5 | turn_data: before roll: (2,9) after roll: (3,4), obstacle: (null), mutated position: (null)
+turn_id: 13 | player: 1 | die_roll: 1 | turn_data: before roll: (2,1) after roll: (2,2), obstacle: (Ladder), mutated position: (4,4)
+turn_id: 14 | player: 2 | die_roll: 5 | turn_data: before roll: (3,4) after roll: (3,9), obstacle: (null), mutated position: (null)
+turn_id: 15 | player: 1 | die_roll: 5 | turn_data: before roll: (4,4) after roll: (4,9), obstacle: (null), mutated position: (null)
+turn_id: 16 | player: 2 | die_roll: 3 | turn_data: before roll: (3,9) after roll: (4,2), obstacle: (null), mutated position: (null)
+turn_id: 17 | player: 1 | die_roll: 6 | turn_data: before roll: (4,9) after roll: (5,5), obstacle: (Snake), mutated position: (3,3)
+turn_id: 18 | player: 2 | die_roll: 2 | turn_data: before roll: (4,2) after roll: (4,4), obstacle: (null), mutated position: (null)
+turn_id: 19 | player: 1 | die_roll: 3 | turn_data: before roll: (3,3) after roll: (3,6), obstacle: (null), mutated position: (null)
+turn_id: 20 | player: 2 | die_roll: 1 | turn_data: before roll: (4,4) after roll: (4,5), obstacle: (null), mutated position: (null)
+turn_id: 21 | player: 1 | die_roll: 5 | turn_data: before roll: (3,6) after roll: (4,1), obstacle: (Snake), mutated position: (2,1)
+turn_id: 22 | player: 2 | die_roll: 1 | turn_data: before roll: (4,5) after roll: (4,6), obstacle: (null), mutated position: (null)
+turn_id: 23 | player: 1 | die_roll: 5 | turn_data: before roll: (2,1) after roll: (2,6), obstacle: (null), mutated position: (null)
+turn_id: 24 | player: 2 | die_roll: 1 | turn_data: before roll: (4,6) after roll: (4,7), obstacle: (null), mutated position: (null)
+turn_id: 25 | player: 1 | die_roll: 2 | turn_data: before roll: (2,6) after roll: (2,8), obstacle: (null), mutated position: (null)
+turn_id: 26 | player: 2 | die_roll: 5 | turn_data: before roll: (4,7) after roll: (5,2), obstacle: (null), mutated position: (null)
+turn_id: 27 | player: 1 | die_roll: 1 | turn_data: before roll: (2,8) after roll: (2,9), obstacle: (null), mutated position: (null)
+turn_id: 28 | player: 2 | die_roll: 6 | turn_data: before roll: (5,2) after roll: (5,8), obstacle: (null), mutated position: (null)
+turn_id: 29 | player: 1 | die_roll: 1 | turn_data: before roll: (2,9) after roll: (3,0), obstacle: (null), mutated position: (null)
+turn_id: 30 | player: 2 | die_roll: 5 | turn_data: before roll: (5,8) after roll: (6,3), obstacle: (null), mutated position: (null)
+turn_id: 31 | player: 1 | die_roll: 6 | turn_data: before roll: (3,0) after roll: (3,6), obstacle: (null), mutated position: (null)
+turn_id: 32 | player: 2 | die_roll: 5 | turn_data: before roll: (6,3) after roll: (6,8), obstacle: (null), mutated position: (null)
+turn_id: 33 | player: 1 | die_roll: 5 | turn_data: before roll: (3,6) after roll: (4,1), obstacle: (Snake), mutated position: (2,1)
+turn_id: 34 | player: 2 | die_roll: 2 | turn_data: before roll: (6,8) after roll: (7,0), obstacle: (null), mutated position: (null)
+turn_id: 35 | player: 1 | die_roll: 3 | turn_data: before roll: (2,1) after roll: (2,4), obstacle: (null), mutated position: (null)
+turn_id: 36 | player: 2 | die_roll: 2 | turn_data: before roll: (7,0) after roll: (7,2), obstacle: (null), mutated position: (null)
+turn_id: 37 | player: 1 | die_roll: 2 | turn_data: before roll: (2,4) after roll: (2,6), obstacle: (null), mutated position: (null)
+turn_id: 38 | player: 2 | die_roll: 2 | turn_data: before roll: (7,2) after roll: (7,4), obstacle: (null), mutated position: (null)
+turn_id: 39 | player: 1 | die_roll: 5 | turn_data: before roll: (2,6) after roll: (3,1), obstacle: (null), mutated position: (null)
+turn_id: 40 | player: 2 | die_roll: 4 | turn_data: before roll: (7,4) after roll: (7,8), obstacle: (null), mutated position: (null)
+turn_id: 41 | player: 1 | die_roll: 1 | turn_data: before roll: (3,1) after roll: (3,2), obstacle: (null), mutated position: (null)
+turn_id: 42 | player: 2 | die_roll: 3 | turn_data: before roll: (7,8) after roll: (8,1), obstacle: (null), mutated position: (null)
+turn_id: 43 | player: 1 | die_roll: 3 | turn_data: before roll: (3,2) after roll: (3,5), obstacle: (null), mutated position: (null)
+turn_id: 44 | player: 2 | die_roll: 2 | turn_data: before roll: (8,1) after roll: (8,3), obstacle: (null), mutated position: (null)
+turn_id: 45 | player: 1 | die_roll: 1 | turn_data: before roll: (3,5) after roll: (3,6), obstacle: (null), mutated position: (null)
+turn_id: 46 | player: 2 | die_roll: 4 | turn_data: before roll: (8,3) after roll: (8,7), obstacle: (null), mutated position: (null)
+turn_id: 47 | player: 1 | die_roll: 1 | turn_data: before roll: (3,6) after roll: (3,7), obstacle: (null), mutated position: (null)
+turn_id: 48 | player: 2 | die_roll: 6 | turn_data: before roll: (8,7) after roll: (9,3), obstacle: (null), mutated position: (null)
+turn_id: 49 | player: 1 | die_roll: 2 | turn_data: before roll: (3,7) after roll: (3,9), obstacle: (null), mutated position: (null)
+turn_id: 50 | player: 2 | die_roll: 1 | turn_data: before roll: (9,3) after roll: (9,4), obstacle: (null), mutated position: (null)
+turn_id: 51 | player: 1 | die_roll: 4 | turn_data: before roll: (3,9) after roll: (4,3), obstacle: (null), mutated position: (null)
+turn_id: 52 | player: 2 | die_roll: 3 | turn_data: before roll: (9,4) after roll: (9,7), obstacle: (null), mutated position: (null)
+turn_id: 53 | player: 1 | die_roll: 2 | turn_data: before roll: (4,3) after roll: (4,5), obstacle: (null), mutated position: (null)
+turn_id: 54 | player: 2 | die_roll: 6 | turn_data: before roll: (9,7) after roll: (9,7), obstacle: (null), mutated position: (null)
+turn_id: 55 | player: 1 | die_roll: 3 | turn_data: before roll: (4,5) after roll: (4,8), obstacle: (null), mutated position: (null)
+turn_id: 56 | player: 2 | die_roll: 6 | turn_data: before roll: (9,7) after roll: (9,7), obstacle: (null), mutated position: (null)
+turn_id: 57 | player: 1 | die_roll: 1 | turn_data: before roll: (4,8) after roll: (4,9), obstacle: (null), mutated position: (null)
+turn_id: 58 | player: 2 | die_roll: 3 | turn_data: before roll: (9,7) after roll: (9,7), obstacle: (null), mutated position: (null)
+turn_id: 59 | player: 1 | die_roll: 4 | turn_data: before roll: (4,9) after roll: (5,3), obstacle: (null), mutated position: (null)
+turn_id: 60 | player: 2 | die_roll: 1 | turn_data: before roll: (9,7) after roll: (9,8), obstacle: (null), mutated position: (null)
+turn_id: 61 | player: 1 | die_roll: 2 | turn_data: before roll: (5,3) after roll: (5,5), obstacle: (Snake), mutated position: (3,3)
+turn_id: 62 | player: 2 | die_roll: 3 | turn_data: before roll: (9,8) after roll: (9,8), obstacle: (null), mutated position: (null)
+turn_id: 63 | player: 1 | die_roll: 2 | turn_data: before roll: (3,3) after roll: (3,5), obstacle: (null), mutated position: (null)
+turn_id: 64 | player: 2 | die_roll: 1 | turn_data: before roll: (9,8) after roll: (9,9), obstacle: (null), mutated position: (null)
 Winner: Player 2 won the game by rolling a 1
 ```

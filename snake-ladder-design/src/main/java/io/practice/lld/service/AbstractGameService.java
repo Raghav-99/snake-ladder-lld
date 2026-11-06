@@ -18,7 +18,7 @@ public abstract class AbstractGameService {
         return this.state;
     }
     
-    public abstract boolean start(Player p);
+    public abstract boolean canStart(int dieRoll);
     
     protected final Cell move(Player p) {
         int[] pos = calcPosition(p);
