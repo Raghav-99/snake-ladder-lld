@@ -65,7 +65,7 @@ It has 2 public methods; `void roll()` that generates a random integer b/w 1 and
 
 - `Obstacle`: Lives in `Obstacle.java`. Is the abstract class for any obstacles like snake, ladder etc. Has an abstract method that subclasses need to implement called ~~`Cell doAction(Cell)`~~(redundant since obstacles are now represented as a DAG and its now used to mutate player position) and another called `void throwIfSpawnInvalid(Cell, Cell)` which throws an IllegalArgumentException if the spawn points are invalid for that obstacle. 
 
-This method takes a single argument of type cell which generally denotes the cell at which obstacle was encountered and its upto the dev to mutate the current player's position by returning the new Cell value. As with the case with `Cell`, any obstacle has a starting cell and an ending cell.
+~~This method takes a single argument of type cell which generally denotes the cell at which obstacle was encountered and its upto the dev to mutate the current player's position by returning the new Cell value. As with the case with `Cell`, any obstacle has a starting cell and an ending cell.~~
 
 - `Snake` and `Ladder`: Lives in `Snake.java` and `Ladder.java` respectively. Combining this 2 for brevity.
 
