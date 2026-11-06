@@ -16,15 +16,22 @@ public class GameController {
 
     public void run(Queue<Player> players, Die die) throws InterruptedException {
         Player p = null;
+        int roll;
         int i=0;
         do {
-            p = players.peek();
-            playTurn(players, die,i++);
-        } while (!gameService.start(p));
-        System.out.println("Game has started...");
+            p = players.poll();
+            roll = rollDie(die);
+            players.add(p);
+        } while (!gameService.canStart(roll));
+        playTurn(p, roll, i++);
+        System.out.println("--Game started by player "+p.getName()+"--");
         
         while (!gameService.end()) {
-            playTurn(players, die, i++);
+            p = players.poll();
+            roll = rollDie(die);
+            playTurn(p, roll, i++);
+            if(!gameService.markIfPlayerWon(p))
+                players.add(p);
         }
 
         for (Winner winner : gameService.getGameState().getWinners()) {
@@ -36,13 +43,13 @@ public class GameController {
         System.out.println(String.format("turn_id: %d | player: %s | die_roll: %d | turn_data: %s", i, p.getName(), roll, turnData == null ? "null" : turnData));
     }
 
-    private void playTurn(Queue<Player> players, Die die, int i) {
-        if(players.isEmpty()) return;
-        Player currPlayer = players.poll();
+    private void playTurn(Player p, int rollVal, int i) {
+        TurnData turnData = gameService.next(p);
+        printCurrentTurnInfo(p, rollVal, turnData, i);
+    }
+
+    private int rollDie(Die die) {
         die.roll();
-        TurnData turnData = gameService.next(currPlayer);
-        printCurrentTurnInfo(currPlayer, die.peek(), turnData, i);
-        if(!gameService.markIfPlayerWon(currPlayer))
-            players.add(currPlayer);
+        return die.peek();
     }
 }
